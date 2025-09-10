@@ -65,37 +65,28 @@ fun makeBet(gameState: GameState): Int {
 }
 
 fun getHandStrength(gameState: GameState): Double {
-    // Construct the query parameters for RainMan API.
-    // Example parameters: you may use player hole cards and community cards as input.
-    // The following constructs a parameter string with hole_cards and community_cards in a simple format.
+    // Define a simple mapping from card rank to a numeric value.
+    val rankValues = mapOf(
+        "2" to 2, "3" to 3, "4" to 4, "5" to 5,
+        "6" to 6, "7" to 7, "8" to 8, "9" to 9,
+        "10" to 10, "J" to 11, "Q" to 12, "K" to 13, "A" to 14
+    )
+
     val myPlayer = gameState.players[gameState.in_action]
-    val holeCardsParam = myPlayer.hole_cards?.joinToString(separator = ",") { "${it.rank}${it.suit.first()}" } ?: ""
-    val communityCardsParam = gameState.community_cards.joinToString(separator = ",") { "${it.rank}${it.suit.first()}" }
+    // Gather all cards: hole cards (if available) and community cards.
+    val allCards = mutableListOf<Card>()
+    myPlayer.hole_cards?.let { allCards.addAll(it) }
+    allCards.addAll(gameState.community_cards)
 
-    // Construct URL. (This endpoint and query format is only an example. Please refer to the LeanPoker RainMan API documentation for details.)
-    val apiUrl = "http://rainman.leanpoker.org/score" +
-            "?hole_cards=$holeCardsParam" +
-            "&community_cards=$communityCardsParam"
-
-    return try {
-        val url = URL(apiUrl)
-        val connection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = 3000
-        connection.readTimeout = 3000
-
-        val responseCode = connection.responseCode
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            val responseText = connection.inputStream.bufferedReader().readText()
-            // Expecting a JSON response with a "score" field.
-            val json = JSONObject(responseText)
-            json.getDouble("score")
-        } else {
-            // In case of error, default to a neutral rating.
-            0.5
-        }
-    } catch (e: Exception) {
-        // Log error if needed and return neutral strength.
-        0.5
+    // Compute total score based on available cards.
+    val totalScore = allCards.sumOf { card ->
+        rankValues.getOrDefault(card.rank, 0)
     }
+
+    // In our simple approach, we assume the maximum possible total for 7 cards is if all cards are Aces.
+    // That's 7 * 14 = 98. The minimal total (if all are "2") is 7 * 2 = 14.
+    // Normalize the score between 0.0 and 1.0.
+    val normalized = ((totalScore - 14).toDouble() / (98 - 14).toDouble()).coerceIn(0.0, 1.0)
+    return normalized
 }
+

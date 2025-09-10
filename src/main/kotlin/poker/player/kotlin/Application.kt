@@ -9,6 +9,31 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.json.JSONObject
 
+
+fun Application.installRoutes() {
+    val playerDecision = PlayerDecision()
+
+    routing {
+        get("/") { call.respondText("OK", ContentType.Text.Plain) }
+        get("/version") { call.respondText(playerDecision.version(), ContentType.Text.Plain) }
+        post("/bet") {
+            val body = call.receiveText()
+            try {
+                val json = JSONObject(body)
+                // Here we call getState so that different phases (pre-flop / flop / later) are used
+                val decision = getState(parseGameState(json))
+                call.respondText(decision.toString(), ContentType.Text.Plain)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, "0")
+            }
+        }
+        post("/showdown") {
+            call.respondText("OK", ContentType.Text.Plain)
+        }
+    }
+}
+
+
 fun main() {
     val playerDecision = PlayerDecision()
     embeddedServer(Netty, getPort()) {

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class MakeBetTest {
+class getStateTest {
 
     private fun gsWithCards(
         myBet: Int,
@@ -33,7 +33,7 @@ class MakeBetTest {
             myBet = 80, currentBuyIn = 320, minRaise = 240, myStack = 1000,
             holeCards = listOf(Card("2","clubs"), Card("3","diamonds"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold with weak hand
     }
 
@@ -44,7 +44,7 @@ class MakeBetTest {
             myBet = 80, currentBuyIn = 320, minRaise = 240, myStack = 1000,
             holeCards = listOf(Card("A","spades"), Card("A","hearts"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // folds at exactly 0.55 threshold
     }
 
@@ -55,7 +55,7 @@ class MakeBetTest {
             myBet = 50, currentBuyIn = 200, minRaise = 50, myStack = 1000,
             holeCards = listOf(Card("K","clubs"), Card("K","diamonds"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
     }
 
@@ -66,7 +66,7 @@ class MakeBetTest {
             myBet = 100, currentBuyIn = 300, minRaise = 50, myStack = 150,
             holeCards = listOf(Card("Q","spades"), Card("Q","hearts"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
     }
 
@@ -77,7 +77,7 @@ class MakeBetTest {
             myBet = 400, currentBuyIn = 300, minRaise = 50, myStack = 1000,
             holeCards = listOf(Card("A","clubs"), Card("A","diamonds")) // doesn't matter
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // no additional bet needed
     }
 
@@ -87,7 +87,7 @@ class MakeBetTest {
             myBet = 0, currentBuyIn = 100, minRaise = 50, myStack = 0,
             holeCards = listOf(Card("A","clubs"), Card("A","diamonds")) // doesn't matter
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // no money to bet
     }
 
@@ -98,7 +98,7 @@ class MakeBetTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("A","spades"), Card("K","spades"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold with 0.5 strength
     }
 
@@ -109,7 +109,7 @@ class MakeBetTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("2","clubs"), Card("7","diamonds"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold
     }
 
@@ -120,32 +120,7 @@ class MakeBetTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("8","hearts"), Card("8","diamonds"))
         )
-        val bet = makeBet(game)
+        val bet = getState(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
-    }
-
-    @Test
-    fun `debug hand strengths`() {
-        // Debug test to see actual hand strength values
-        val weakHand = gsWithCards(
-            myBet = 0, currentBuyIn = 10, minRaise = 10, myStack = 1000,
-            holeCards = listOf(Card("2","clubs"), Card("3","diamonds"))
-        )
-        val pairAces = gsWithCards(
-            myBet = 0, currentBuyIn = 10, minRaise = 10, myStack = 1000,
-            holeCards = listOf(Card("A","spades"), Card("A","hearts"))
-        )
-        val akSuited = gsWithCards(
-            myBet = 0, currentBuyIn = 10, minRaise = 10, myStack = 1000,
-            holeCards = listOf(Card("A","spades"), Card("K","spades"))
-        )
-        
-        println("[DEBUG_LOG] Weak hand (2-3) strength: ${getHandStrength(weakHand)}")
-        println("[DEBUG_LOG] Pair of aces strength: ${getHandStrength(pairAces)}")
-        println("[DEBUG_LOG] A-K suited strength: ${getHandStrength(akSuited)}")
-        println("[DEBUG_LOG] Threshold is 0.55")
-        
-        // This test always passes, just for debugging
-        assertTrue(true)
     }
 }

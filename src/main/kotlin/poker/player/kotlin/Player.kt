@@ -8,7 +8,7 @@ import java.net.URL
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
         val gameStateData = parseGameState(game_state)
-        return makeBet(gameStateData)
+        return getState(gameStateData)
     }
 
     fun showdown() {

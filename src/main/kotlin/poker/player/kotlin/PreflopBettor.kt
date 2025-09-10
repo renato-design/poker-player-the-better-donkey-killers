@@ -51,11 +51,11 @@ class PreflopBettor {
 
     fun makeBetPreflop(gameState: GameState): Int {
 
-        if (isPreflop(gameState) == false) {
+        if (!isPreflop(gameState)) {
             return -1
         }
 
-        if (hasOtherPlayerBetOrRaised(gameState) == true) {
+        if (hasOtherPlayerBetOrRaised(gameState)) {
             return -1
         }
 

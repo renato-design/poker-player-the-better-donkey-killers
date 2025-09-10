@@ -70,16 +70,29 @@ class PreflopBettor {
         return makeBet(bigBlindsLeft, position, gameState)
     }
 
-    fun isHoleardsOneOfTheseHands(hands: List<List<Card>>, gameState: GameState): Boolean {
-        val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return false
-        return hands.any { myPlayer.hasHoleCardsIn(it) }
-    }
-
     fun areHandsInRange(range: String, gameState: GameState): Boolean {
         val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return false
         val holeCards = myPlayer.hole_cards ?: return false
         if (holeCards.size != 2) return false
-        return containsHand(range, Card(holeCards[0].rank, holeCards[0].suit), Card(holeCards[1].rank, holeCards[1].suit))
+        val preflopCards = mapCardsToPreflopCards(holeCards)
+        val rangeCards = parsePreflopRange(range)
+
+        if (preflopCards != null && rangeCards.contains(preflopCards)) {
+            return true
+        }
+
+        return false
+    }
+
+    fun mapCardsToPreflopCards(holeCards: List<Card>): PreflopCard? {
+        if (holeCards.size != 2) return null
+        val ranks = listOf("A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2")
+        val rank1Index = ranks.indexOf(holeCards[0].rank)
+        val rank2Index = ranks.indexOf(holeCards[1].rank)
+        if (rank1Index == -1 || rank2Index == -1) return null
+        val highestRank = if (rank1Index < rank2Index) holeCards[0].rank else holeCards[1].rank
+        val isSuited = holeCards[0].suit == holeCards[1].suit
+        return PreflopCard(highestRank, isSuited)
     }
 
     private fun makeBet(bbLeft: Int, position: Position, gameState: GameState): Int {
@@ -89,104 +102,88 @@ class PreflopBettor {
         when (position) {
             Position.BUTTON -> {
                 return when {
-                    bbLeft >= 15 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    bbLeft >= 10 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    bbLeft >= 5 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    else -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 15 -> areHandsInRange("A2s+,K5s+,Q7s+,J8s+,T8s+,97s+,86s+,76s,22+,A4o+,K9o+,Q9o+,JTo,T9o", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 10 -> areHandsInRange("A2s+,K4s+,Q6s+,J7s+,T8s+,97s+,87s,76s,22+,A4o+,K9o+,JTo,T9o", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 5 -> areHandsInRange("A2s+,K2s+,Q5s+,J7s+,T7s+,97s+,87s,76s,22+,A2o+,K5o+,Q9o+,J9o,T9o", gameState) .let { if (it) myPlayer.stack else 0 }
+                    else -> areHandsInRange("A2s+,K2s+,Q5s+,J7s+,T7s+,97s+,87s,76s,22+,A2o+,K5o+,Q9o+,J9o,T9o", gameState) .let { if (it) myPlayer.stack else 0 }
                 }
             }
             Position.CUTOFF -> {
                 return when {
-                    bbLeft >= 20 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    bbLeft >= 10 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    bbLeft >= 5 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 15 -> areHandsInRange("A2s+,K5s+,Q8s+,J8s+,T8s+,98s+,87s,22+,A2o+,KTo+,QTo+,JTo", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 10 -> areHandsInRange("A2s+,K5s+,Q8s+,J8s+,T8s+,98s+,87s,22+,A2o+,KTo+,QTo+,JTo", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 5 -> areHandsInRange("A2s+,K2s+,Q6s+,J7s+,T7s+,98s,87s,22+,A2o+,K6o+,Q9o+,J9o+", gameState) .let { if (it) myPlayer.stack else 0 }
                     else -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
                 }
             }
             Position.BIG_BLIND, Position.SMALL_BLIND -> {
                 return when {
-                    bbLeft >= 20 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    bbLeft >= 10 -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
-                    else -> areHandsInRange("", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 15 -> areHandsInRange("A2s+,K9s+,Q9s+J9s+,T9s+,98s+,22+,A8o+,KJo+", gameState) .let { if (it) myPlayer.stack else 0 }
+                    bbLeft >= 10 -> areHandsInRange("A2s+,K9s+,Q9s+J9s+,T9s+,98s+,22+,A8o+,KJo+", gameState) .let { if (it) myPlayer.stack else 0 }
+                    else -> areHandsInRange("A2s+,K2s+,Q2s+J2s+,T2s+,92s+,83s+,74s+,63s+,53s+,43s+,22+,A2o+,K2o+,Q2o+,J2o+,T3o+,96o+,86o+,76o+", gameState) .let { if (it) myPlayer.stack else 0 }
                 }
             }
         }
     }
 
-    val ranks = listOf("2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A")
-    val suits = listOf("c", "d", "h", "s")
+    data class PreflopCard(
+        val rank: String,
+        val isSuited: Boolean
+    )
 
-    fun parseHandRange(range: String): List<Pair<Card, Card>> {
-        return range.split(",").flatMap { expandPattern(it.trim()) }
-    }
+    val ranks = listOf("A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2")
 
-    fun expandPattern(pattern: String): List<Pair<Card, Card>> {
-        return when {
-            // pocket pairs like "22"
-            pattern.length == 2 && pattern[0] == pattern[1] -> {
-                val rank = pattern[0].toString()
-                generatePocketPairs(rank)
+    fun parsePreflopRange(range: String): List<PreflopCard> {
+        val result = mutableListOf<PreflopCard>()
+
+        fun rankIndex(rank: String) = ranks.indexOf(rank)
+
+        for (part in range.split(",")) {
+            val cleanPart = part.trim()
+            if (cleanPart.isEmpty()) continue
+
+            val plus = cleanPart.endsWith("+")
+            val type = when {
+                cleanPart.endsWith("s+") || cleanPart.endsWith("s") -> "s"
+                cleanPart.endsWith("o+") || cleanPart.endsWith("o") -> "o"
+                else -> ""
             }
-            // suited/offsuit with plus (e.g. A2s+, A5o+)
-            pattern.endsWith("+") -> {
-                val base = pattern.dropLast(1)
-                expandPlus(base)
-            }
-            // single suited/offsuit hand (e.g. "A2s")
-            else -> expandSingle(pattern)
-        }
-    }
 
-    fun expandPlus(base: String): List<Pair<Card, Card>> {
-        val r1 = base[0].toString()
-        val r2 = base[1].toString()
-        val suited = base.endsWith("s")
-        val offsuit = base.endsWith("o")
+            val main = cleanPart.removeSuffix("+").removeSuffix("s").removeSuffix("o")
 
-        val i1 = ranks.indexOf(r1)
-        val start = ranks.indexOf(r2)
+            if (main.length == 2) {
+                val r1 = main[0].toString()
+                val r2 = main[1].toString()
 
-        return (start until i1).flatMap { i2 ->
-            val hand = r1 + ranks[i2] + if (suited) "s" else "o"
-            expandSingle(hand)
-        }
-    }
-
-    fun expandSingle(hand: String): List<Pair<Card, Card>> {
-        val r1 = hand[0].toString()
-        val r2 = hand[1].toString()
-        return when {
-            hand.endsWith("s") -> generateSuitedCombos(r1, r2)
-            hand.endsWith("o") -> generateOffsuitCombos(r1, r2)
-            else -> generatePocketPairs(r1) // fallback if "22"
-        }
-    }
-
-    fun generatePocketPairs(rank: String): List<Pair<Card, Card>> {
-        val cards = suits.map { Card(rank, it) }
-        return cards.flatMapIndexed { i, c1 ->
-            cards.drop(i + 1).map { c2 -> Pair(c1, c2) }
-        }
-    }
-
-    fun generateSuitedCombos(r1: String, r2: String): List<Pair<Card, Card>> {
-        return suits.map { s -> Pair(Card(r1, s), Card(r2, s)) }
-    }
-
-    fun generateOffsuitCombos(r1: String, r2: String): List<Pair<Card, Card>> {
-        return suits.flatMap { s1 ->
-            suits.filter { it != s1 }.map { s2 ->
-                Pair(Card(r1, s1), Card(r2, s2))
+                if (r1 == r2) { // Pair
+                    val start = rankIndex(r1)
+                    val end = if (plus) 0 else start
+                    for (i in start downTo end) {
+                        result.add(PreflopCard(ranks[i] + ranks[i], false))
+                    }
+                } else { // Non-pair
+                    val start = rankIndex(r2)
+                    val end = if (plus) {
+                        val r1Index = rankIndex(r1)
+                        // For XY+, we want to go up to the rank just before X
+                        // Since ranks are in descending order, "just before X" is at index r1Index + 1
+                        r1Index + 1
+                    } else start
+                    for (i in start downTo end) {
+                        val hand = r1 + ranks[i]
+                        when (type) {
+                            "s" -> result.add(PreflopCard(hand, true))
+                            "o" -> result.add(PreflopCard(hand, false))
+                            "" -> {
+                                result.add(PreflopCard(hand, true))
+                                result.add(PreflopCard(hand, false))
+                            }
+                        }
+                    }
+                }
             }
         }
+        return result
     }
 
-    fun containsHand(range: String, c1: Card, c2: Card): Boolean {
-        val allHands = parseHandRange(range)
-
-        // Normalize order (we don’t care which card is first)
-        return allHands.any { (h1, h2) ->
-            (h1 == c1 && h2 == c2) || (h1 == c2 && h2 == c1)
-        }
-    }
 }

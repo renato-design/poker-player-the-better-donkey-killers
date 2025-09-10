@@ -7,123 +7,109 @@ class PreflopBettorTests {
 
     private val bettor = PreflopBettor()
 
-    // Helper to shorten card creation
-    private fun c(rank: String, suit: String) = Card(rank, suit)
-
     @Test
-    fun `generatePocketPairs produces 6 combos`() {
-        val pairs = bettor.generatePocketPairs("A")
-        assertEquals(6, pairs.size, "Pocket pairs should have 6 suit combinations")
-        // All pairs must have same rank
-        assertTrue(pairs.all { it.first.rank == "A" && it.second.rank == "A" })
+    fun `parsePreflopRange parses single pair 22`() {
+        val result = bettor.parsePreflopRange("22")
+        assertEquals(1, result.size)
+        assertEquals("22", result[0].rank)
+        assertFalse(result[0].isSuited, "Pairs are not suited")
     }
 
     @Test
-    fun `generateSuitedCombos produces 4 suited combos`() {
-        val combos = bettor.generateSuitedCombos("A", "K")
-        assertEquals(4, combos.size, "Suited combos should have 4 suit combinations")
-        // All combos must be suited and ranks preserved
-        assertTrue(combos.all {
-            it.first.suit == it.second.suit &&
-                    setOf(it.first.rank, it.second.rank) == setOf("A", "K")
-        })
+    fun `parsePreflopRange parses 22+ into all pocket pairs 22AA`() {
+        val result = bettor.parsePreflopRange("22+")
+        val expectedPairs = listOf("22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA")
+        assertEquals(expectedPairs.size, result.size)
+        assertEquals(expectedPairs.toSet(), result.map { it.rank }.toSet())
+        assertTrue(result.all { !it.isSuited }, "All pairs should be marked as non-suited")
     }
 
     @Test
-    fun `generateOffsuitCombos produces 12 offsuit combos`() {
-        val combos = bettor.generateOffsuitCombos("A", "K")
-        assertEquals(12, combos.size, "Offsuit combos should have 12 suit combinations")
-        // All combos must be offsuit and ranks preserved
-        assertTrue(combos.all {
-            it.first.suit != it.second.suit &&
-                    setOf(it.first.rank, it.second.rank) == setOf("A", "K")
-        })
+    fun `parsePreflopRange parses AK (no suffix) as both suited and offsuit`() {
+        val result = bettor.parsePreflopRange("AK")
+        val akSuited = result.count { it.rank == "AK" && it.isSuited }
+        val akOffsuit = result.count { it.rank == "AK" && !it.isSuited }
+        assertEquals(2, akSuited + akOffsuit)
+        assertEquals(1, akSuited, "Expected exactly one suited AK entry")
+        assertEquals(1, akOffsuit, "Expected exactly one offsuit AK entry")
     }
 
     @Test
-    fun `expandSingle parses AA to 6 combos`() {
-        val combos = bettor.expandSingle("AA")
-        assertEquals(6, combos.size)
-        assertTrue(combos.all { it.first.rank == "A" && it.second.rank == "A" })
+    fun `parsePreflopRange parses AKs as suited only`() {
+        val result = bettor.parsePreflopRange("AKs")
+        assertEquals(1, result.size)
+        assertEquals("AK", result[0].rank)
+        assertTrue(result[0].isSuited, "AKs should be suited only")
     }
 
     @Test
-    fun `expandSingle parses AKs to 4 suited combos`() {
-        val combos = bettor.expandSingle("AKs")
-        assertEquals(4, combos.size)
-        assertTrue(combos.all {
-            it.first.suit == it.second.suit &&
-                    setOf(it.first.rank, it.second.rank) == setOf("A", "K")
-        })
+    fun `parsePreflopRange parses AKo as offsuit only`() {
+        val result = bettor.parsePreflopRange("AKo")
+        assertEquals(1, result.size)
+        assertEquals("AK", result[0].rank)
+        assertFalse(result[0].isSuited, "AKo should be offsuit only")
     }
 
     @Test
-    fun `expandSingle parses AKo to 12 offsuit combos`() {
-        val combos = bettor.expandSingle("AKo")
-        assertEquals(12, combos.size)
-        assertTrue(combos.all {
-            it.first.suit != it.second.suit &&
-                    setOf(it.first.rank, it.second.rank) == setOf("A", "K")
-        })
+    fun `parsePreflopRange parses A2s+ as suited A2AK`() {
+        val result = bettor.parsePreflopRange("A2s+")
+        val expected = listOf("A2","A3","A4","A5","A6","A7","A8","A9","AT","AJ","AQ","AK")
+        assertEquals(expected.size, result.size, "Expected suited ace wheel through AK")
+        assertEquals(expected.toSet(), result.map { it.rank }.toSet())
+        assertTrue(result.all { it.isSuited }, "All entries should be suited for s+")
     }
 
     @Test
-    fun `expandPlus for pocket pairs 77+ expands to expected count`() {
-        // 77, 88, 99, TT, JJ, QQ, KK, AA = 8 pocket pairs; each has 6 combos => 48
-        val combos = bettor.expandPlus("77+")
-        assertEquals(48, combos.size)
-        assertTrue(combos.all { it.first.rank == it.second.rank })
+    fun `parsePreflopRange parses A2o+ as offsuit A2AK`() {
+        val result = bettor.parsePreflopRange("A2o+")
+        val expected = listOf("A2","A3","A4","A5","A6","A7","A8","A9","AT","AJ","AQ","AK")
+        assertEquals(expected.size, result.size, "Expected offsuit ace wheel through AK")
+        assertEquals(expected.toSet(), result.map { it.rank }.toSet())
+        assertTrue(result.all { !it.isSuited }, "All entries should be offsuit for o+")
     }
 
     @Test
-    fun `expandPlus for suited aces A2s+ expands to expected count`() {
-        // A2s through AKs => 12 ranks (2..K), each has 4 suited combos => 48
-        val combos = bettor.expandPlus("A2s+")
-        print(combos)
-        assertEquals(48, combos.size)
-        assertTrue(combos.all {
-            it.first.suit == it.second.suit &&
-                    setOf(it.first.rank, it.second.rank).containsAll(listOf("A"))
-        })
+    fun `parsePreflopRange parses K9+ as both suited and offsuit K9,KT,KJ,KQ`() {
+        val result = bettor.parsePreflopRange("K9+")
+        val expected = listOf("K9","KT","KJ","KQ")
+        val byHand = result.groupBy { it.rank }
+        assertEquals(expected.toSet(), byHand.keys)
+        expected.forEach { hand ->
+            val suited = byHand[hand]?.count { it.isSuited } ?: 0
+            val offsuit = byHand[hand]?.count { !it.isSuited } ?: 0
+            assertEquals(1, suited, "Expected one suited entry for $hand")
+            assertEquals(1, offsuit, "Expected one offsuit entry for $hand")
+        }
+        assertEquals(expected.size * 2, result.size)
     }
 
     @Test
-    fun `parseHandRange aggregates multiple patterns`() {
-        val combos = bettor.parseHandRange("AA, AKs, AKo")
-        // AA -> 6, AKs -> 4, AKo -> 12 => total 22
-        assertEquals(22, combos.size)
+    fun `parsePreflopRange handles comma-separated list and whitespace`() {
+        val result = bettor.parsePreflopRange(" 77+ ,  AKs,   76o ")
+        val hands = result.map { it.rank }
+        val expectedPairs = setOf("77","88","99","TT","JJ","QQ","KK","AA")
+
+        // Pairs part
+        assertTrue(expectedPairs.all { it in hands })
+        assertTrue(result.filter { it.rank in expectedPairs }.all { !it.isSuited })
+
+        // AKs part
+        val akEntries = result.filter { it.rank == "AK" }
+        assertEquals(1, akEntries.size)
+        assertTrue(akEntries[0].isSuited, "AKs should be suited only")
+
+        // 76o part
+        val seventySixEntries = result.filter { it.rank == "76" }
+        assertEquals(1, seventySixEntries.size)
+        assertFalse(seventySixEntries[0].isSuited, "76o should be offsuit only")
     }
 
     @Test
-    fun `containsHand works for pocket pair`() {
-        assertTrue(bettor.containsHand("AA", c("A","c"), c("A","d")))
-        assertFalse(bettor.containsHand("AA", c("K","c"), c("A","d")))
-    }
-
-    @Test
-    fun `containsHand enforces suitedness for AKs`() {
-        assertTrue(bettor.containsHand("AKs", c("A","s"), c("K","s")))
-        assertFalse(bettor.containsHand("AKs", c("A","s"), c("K","d")))
-    }
-
-    @Test
-    fun `containsHand enforces offsuit for AKo`() {
-        assertTrue(bettor.containsHand("AKo", c("A","h"), c("K","s")))
-        assertFalse(bettor.containsHand("AKo", c("A","h"), c("K","h")))
-    }
-
-    @Test
-    fun `containsHand supports pair plus range 77+`() {
-        assertTrue(bettor.containsHand("77+", c("7","c"), c("7","d")))
-        assertTrue(bettor.containsHand("77+", c("A","c"), c("A","d"))) // AA is included
-        assertFalse(bettor.containsHand("77+", c("6","c"), c("6","d")))
-    }
-
-    @Test
-    fun `containsHand supports suited ace plus range A2s+`() {
-        assertTrue(bettor.containsHand("A2s+", c("A","c"), c("2","c")))
-        assertTrue(bettor.containsHand("A2s+", c("A","d"), c("K","d")))
-        assertFalse(bettor.containsHand("A2s+", c("A","h"), c("Q","s"))) // offsuit should fail
-        assertFalse(bettor.containsHand("A2s+", c("A","h"), c("2","s"))) // offsuit should fail
+    fun `parsePreflopRange ignores empty or invalid tokens`() {
+        assertTrue(bettor.parsePreflopRange("").isEmpty())
+        assertTrue(bettor.parsePreflopRange(" , , ").isEmpty())
+        // Invalid tokens like single rank or malformed string should be ignored
+        assertTrue(bettor.parsePreflopRange("A").isEmpty())
+        assertTrue(bettor.parsePreflopRange("XYZ").isEmpty())
     }
 }

@@ -1,6 +1,7 @@
 package poker.player.kotlin
 
 import org.json.JSONObject
+import poker.player.kotlin.handtype.HandType
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -21,50 +22,45 @@ class PlayerDecision {
 }
 
 fun makeBet(gameState: GameState): Int {
-    // Get the current player's data using the in_action index
-    val myPlayer = gameState.players.getOrNull(gameState.in_action)// ?: return 0
+    // Verify the players list is valid
+    if (gameState.players.isEmpty() || gameState.in_action >= gameState.players.size) {
+        return 0 // Fold if no valid player is found
+    }
+    val myPlayer = gameState.players[gameState.in_action]
 
-    // Calculate the minimal call amount required to stay in the hand
-    val requiredCall = gameState.current_buy_in - (myPlayer?.bet?: 0)
-    if (requiredCall < 0 || myPlayer == null) {
-        // Nothing more to call
+    // Calculate the minimal call amount
+    val requiredCall = gameState.current_buy_in - myPlayer.bet
+    if (requiredCall <= 0) {
         return 0
     }
 
-//    return gameState.current_buy_in - myPlayer.bet + gameState.minimum_raise
-
-    // Obtain the hand strength rating from the RainMan API, value from 0.0 (worst) to 1.0 (best)
+    // Get hand strength score (0.0 to 1.0)
     val handStrength = getHandStrength(gameState)
 
     // Simple decision strategy:
-    // If hand strength is low, fold by returning 0.
-    // If hand strength is high enough and the player can afford a raise, bet call + minimum_raise.
-    // Otherwise, just call the required amount.
+    // Adjust thresholds based on hand strength
     return when {
-        handStrength <= 0.55 -> {
-            // Hand is not good enough to continue; folding.
+        handStrength <= 0.35 -> {
+            // Fold if hand is weak
             0
         }
-//        handStrength > 0.95 -> {
-//            // For a very strong hand, try to raise the bet.
-//            myPlayer.stack
-//        }
-//        handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
-//            // For a very strong hand, try to raise the bet.
-//            requiredCall + gameState.minimum_raise * 2
-//        }
-//        handStrength > 0.55 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
-//            // For a very strong hand, try to raise the bet.
-//            requiredCall + gameState.minimum_raise
-//        }
+        handStrength > 0.95 -> {
+            // Very strong hand; go all-in
+            myPlayer.stack
+        }
+        handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
+            requiredCall + gameState.minimum_raise * 2
+        }
+        handStrength > 0.35 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
+            requiredCall + gameState.minimum_raise
+        }
         else -> {
-            // Otherwise, call the current bet.
             if (myPlayer.stack >= requiredCall) requiredCall else myPlayer.stack
         }
     }
 }
 
-fun getState(gameState: GameState) {
+fun getState(gameState: GameState): Int {
 
     val myPlayer = gameState.players[gameState.in_action]
 
@@ -72,6 +68,24 @@ fun getState(gameState: GameState) {
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
     val flop = gameState.community_cards.subList(0, 3)
+
+    return if (flop.plus(myCards).size == 5){
+        val handType = FlopEvaluator().evaluateHand(flop.plus(myCards))
+        return when (handType) {
+            HandType.HIGH_CARD -> 0
+            HandType.PAIR,
+            HandType.TWO_PAIR,
+            HandType.THREE_OF_A_KIND,
+            HandType.STRAIGHT,
+            HandType.FLUSH -> makeBet(gameState)
+            HandType.FULL_HOUSE,
+            HandType.FOUR_OF_A_KIND,
+            HandType.STRAIGHT_FLUSH,
+            HandType.ROYAL_FLUSH -> myPlayer.stack
+        }
+    } else {
+        makeBet(gameState)
+    }
 
 }
 
@@ -83,9 +97,9 @@ fun getHandStrength(gameState: GameState): Double {
         "10" to 10, "J" to 11, "Q" to 12, "K" to 13, "A" to 14
     )
 
-    // Combine hole cards and community cards into one list (7 cards)
-    val myPlayer = gameState.players[gameState.in_action]
+    val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return 0.0
     val allCards: List<Card> = (myPlayer.hole_cards ?: emptyList()) + gameState.community_cards
+    if (allCards.isEmpty()) return 0.0
 
     // Count rank frequencies and suit frequencies
     val rankFreq = mutableMapOf<Int, Int>()
@@ -98,14 +112,11 @@ fun getHandStrength(gameState: GameState): Double {
         suitFreq[card.suit] = suitFreq.getOrDefault(card.suit, 0) + 1
     }
 
-    // Determine if flush exists (5 or more cards with same suit)
     val flushSuit = suitFreq.entries.find { it.value >= 5 }?.key
     val isFlush = flushSuit != null
 
-    // Sort the card values and remove duplicates for straight detection
     val uniqueRanks = ranksList.toSet().toList().sorted()
 
-    // Function that checks for straight in a sorted list
     fun hasStraight(ranks: List<Int>): Boolean {
         if (ranks.size < 5) return false
         var consecutive = 1
@@ -117,18 +128,15 @@ fun getHandStrength(gameState: GameState): Double {
                 consecutive = 1
             }
         }
-        // Special case: Ace can be low in A-2-3-4-5
         if (uniqueRanks.contains(14)) {
-            val lowStraight = listOf(2, 3, 4, 5)
+            val lowStraight = listOf(2,3,4,5)
             if (lowStraight.all { it in ranks }) return true
         }
         return false
     }
 
-    // Check if straight exists
     val isStraight = hasStraight(uniqueRanks)
 
-    // Check for straight flush (if flush, then check straight within flush suit cards)
     var isStraightFlush = false
     if (isFlush) {
         val flushCards = allCards.filter { it.suit == flushSuit }
@@ -136,28 +144,24 @@ fun getHandStrength(gameState: GameState): Double {
         isStraightFlush = hasStraight(flushRanks)
     }
 
-    // Count multiples: pairs, three of a kind, four of a kind.
     val pairs = rankFreq.filter { it.value == 2 }.size
     val trips = rankFreq.filter { it.value == 3 }.size
     val quads = rankFreq.filter { it.value == 4 }.size
 
-    // Determine hand type and assign a base score.
     val score = when {
-        isStraightFlush && uniqueRanks.contains(14) && uniqueRanks.contains(13) -> 1.0 // Royal flush
-        isStraightFlush -> 0.9 // Straight flush
-        quads > 0 -> 0.85       // Four of a kind
-        trips > 0 && pairs > 0 -> 0.8  // Full house
-        isFlush -> 0.75         // Flush
-        isStraight -> 0.7       // Straight
-        trips > 0 -> 0.65       // Three of a kind
-        pairs >= 2 -> 0.6       // Two pair
-        pairs == 1 -> 0.55      // One Pair
+        isStraightFlush && uniqueRanks.contains(14) && uniqueRanks.contains(13) -> 1.0
+        isStraightFlush -> 0.9
+        quads > 0 -> 0.85
+        trips > 0 && pairs > 0 -> 0.8
+        isFlush -> 0.75
+        isStraight -> 0.7
+        trips > 0 -> 0.65
+        pairs >= 2 -> 0.6
+        pairs == 1 -> 0.55
         else -> {
-            // For high card, use the highest card normalized between 0.4 and 0.5
             val highCard = uniqueRanks.maxOrNull() ?: 0
             0.4 + ((highCard - 2) / 12.0 * 0.1)
         }
     }
-
     return score
 }

@@ -41,27 +41,36 @@ fun makeBet(gameState: GameState): Int {
     // If hand strength is high enough and the player can afford a raise, bet call + minimum_raise.
     // Otherwise, just call the required amount.
     return when {
-        handStrength <= 0.35 -> {
+        handStrength <= 0.55 -> {
             // Hand is not good enough to continue; folding.
             0
         }
-        handStrength > 0.95 -> {
-            // For a very strong hand, try to raise the bet.
-            myPlayer.stack
-        }
-        handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
-            // For a very strong hand, try to raise the bet.
-            requiredCall + gameState.minimum_raise * 2
-        }
-        handStrength > 0.35 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
-            // For a very strong hand, try to raise the bet.
-            requiredCall + gameState.minimum_raise
-        }
+//        handStrength > 0.95 -> {
+//            // For a very strong hand, try to raise the bet.
+//            myPlayer.stack
+//        }
+//        handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
+//            // For a very strong hand, try to raise the bet.
+//            requiredCall + gameState.minimum_raise * 2
+//        }
+//        handStrength > 0.55 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
+//            // For a very strong hand, try to raise the bet.
+//            requiredCall + gameState.minimum_raise
+//        }
         else -> {
             // Otherwise, call the current bet.
             if (myPlayer.stack >= requiredCall) requiredCall else myPlayer.stack
         }
     }
+}
+
+fun getState(gameState: GameState) {
+
+    val myPlayer = gameState.players[gameState.in_action]
+
+    val myCards = mutableListOf<Card>()
+    myPlayer.hole_cards?.let { myCards.addAll(it) }
+
 }
 
 fun getHandStrength(gameState: GameState): Double {

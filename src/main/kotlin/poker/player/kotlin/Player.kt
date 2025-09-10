@@ -4,7 +4,8 @@ import org.json.JSONObject
 
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
-        return 100
+        val gameStateData = parseGameState(game_state)
+        return makeBet(gameStateData)
     }
 
     fun showdown() {

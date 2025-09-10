@@ -79,10 +79,10 @@ fun getState(gameState: GameState): Int {
         return when (handType) {
             HandType.HIGH_CARD -> 0
             HandType.PAIR,
-            HandType.TWO_PAIR,
+            HandType.TWO_PAIR -> makeBet(gameState)
             HandType.THREE_OF_A_KIND,
             HandType.STRAIGHT,
-            HandType.FLUSH -> makeBet(gameState)
+            HandType.FLUSH,
             HandType.FULL_HOUSE,
             HandType.FOUR_OF_A_KIND,
             HandType.STRAIGHT_FLUSH,

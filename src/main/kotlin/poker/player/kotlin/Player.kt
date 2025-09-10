@@ -29,14 +29,14 @@ fun makeBet(gameState: GameState): Int {
     val flop = gameState.community_cards
 
     val requiredCall = gameState.current_buy_in - myPlayer.bet
-    if (requiredCall <= 0) {
-        return 0
-    }
 
     val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
 
 
     if(flop.size < 3 ) {
+        if (requiredCall <= 0) {
+            return 0
+        }
         return when (handType) {
             HandType.HIGH_CARD -> requiredCall
             HandType.PAIR -> requiredCall + (gameState.minimum_raise).toInt()
@@ -52,6 +52,11 @@ fun makeBet(gameState: GameState): Int {
     }
 
     if(flop.size == 3 ) {
+
+        if (requiredCall <= 0) {
+            return gameState.minimum_raise
+        }
+
         return when (handType) {
             HandType.HIGH_CARD -> 0
             HandType.PAIR -> requiredCall
@@ -64,6 +69,10 @@ fun makeBet(gameState: GameState): Int {
             HandType.STRAIGHT_FLUSH,
             HandType.ROYAL_FLUSH -> myPlayer.stack
         }
+    }
+
+    if (requiredCall <= 0) {
+        return 0
     }
 
     return when (handType) {

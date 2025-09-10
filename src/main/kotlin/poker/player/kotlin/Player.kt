@@ -12,6 +12,6 @@ class Player {
     }
 
     fun version(): String {
-        return "Kotlin Player 0.0.1"
+        return "donkeykilla"
     }
 }

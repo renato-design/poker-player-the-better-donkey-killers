@@ -8,7 +8,7 @@ import java.net.URL
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
         val gameStateData = parseGameState(game_state)
-        return makeBet(gameStateData)
+        return getState(gameStateData)
     }
 
     fun showdown() {
@@ -76,7 +76,7 @@ fun getState(gameState: GameState): Int {
 
     val handType = HandEvaluator().evaluateBestHand(flop.plus(myCards))
     return when (handType) {
-        HandType.HIGH_CARD -> 0
+        HandType.HIGH_CARD,
         HandType.PAIR,
         HandType.TWO_PAIR,
         HandType.THREE_OF_A_KIND,
@@ -88,6 +88,10 @@ fun getState(gameState: GameState): Int {
         HandType.STRAIGHT_FLUSH,
         HandType.ROYAL_FLUSH -> myPlayer.stack
     }
+}
+
+fun check(gameState: GameState): Int {
+    return 0
 }
 
 fun getHandStrength(gameState: GameState): Double {

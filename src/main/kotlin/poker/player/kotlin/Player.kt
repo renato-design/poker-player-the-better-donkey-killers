@@ -90,8 +90,6 @@ fun getState(gameState: GameState): Int {
     }
 }
 
-}
-
 fun getHandStrength(gameState: GameState): Double {
     // Map card ranks to values
     val rankValues = mapOf(

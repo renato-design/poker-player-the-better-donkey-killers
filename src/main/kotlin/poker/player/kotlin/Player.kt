@@ -30,7 +30,7 @@ fun makeBet(gameState: GameState): Int {
 
     // Calculate the minimal call amount
     val requiredCall = gameState.current_buy_in - myPlayer.bet
-    if (requiredCall <= 0) {
+    if (requiredCall < 0) {
         return 0
     }
 

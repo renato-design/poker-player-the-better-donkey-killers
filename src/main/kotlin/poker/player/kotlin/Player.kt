@@ -8,7 +8,8 @@ import kotlin.random.Random
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
         val gameStateData = parseGameState(game_state)
-        return makeBet(gameStateData)
+        return gameStateData.players[gameStateData.in_action].stack
+//        return makeBet(gameStateData)
     }
 
     fun showdown() {

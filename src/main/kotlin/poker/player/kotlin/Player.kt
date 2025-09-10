@@ -3,6 +3,7 @@ package poker.player.kotlin
 import io.ktor.server.engine.handleFailure
 import org.json.JSONObject
 import poker.player.kotlin.handtype.HandType
+import kotlin.random.Random
 
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
@@ -21,14 +22,24 @@ class PlayerDecision {
 
 fun makeBet(gameState: GameState): Int {
 
+    var ctr = 0
+    gameState.players.forEach{ player -> if(player.status == "active") ctr++}
     val myPlayer = gameState.players[gameState.in_action]
+    val requiredCall = gameState.current_buy_in - myPlayer.bet
+
+    if(ctr > 2) {
+        val a = Random(20)
+        if(a.nextInt(ctr) < 2) {
+            return requiredCall + gameState.minimum_raise
+        }
+        return 0
+    }
 
     val myCards = mutableListOf<Card>()
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
     val flop = gameState.community_cards
 
-    val requiredCall = gameState.current_buy_in - myPlayer.bet
 
 //    val preflopBet = PreflopBettor().makeBetPreflop(gameState)
 //

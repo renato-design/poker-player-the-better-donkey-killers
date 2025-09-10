@@ -1,5 +1,6 @@
 package poker.player.kotlin
 
+import io.ktor.server.engine.handleFailure
 import org.json.JSONObject
 import poker.player.kotlin.handtype.HandType
 
@@ -16,7 +17,6 @@ class PlayerDecision {
     fun version(): String {
         return "donkeykilla"
     }
-
 }
 
 fun makeBet(gameState: GameState): Int {
@@ -34,13 +34,45 @@ fun makeBet(gameState: GameState): Int {
     }
 
     val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
+
+
+    if(flop.size < 3 ) {
+        return when (handType) {
+            HandType.HIGH_CARD -> requiredCall + gameState.minimum_raise
+            HandType.PAIR -> requiredCall + gameState.minimum_raise *2
+            HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
+            HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
+            HandType.STRAIGHT-> requiredCall + gameState.minimum_raise *2
+            HandType.FLUSH -> requiredCall + gameState.minimum_raise *2
+            HandType.FULL_HOUSE,
+            HandType.FOUR_OF_A_KIND,
+            HandType.STRAIGHT_FLUSH,
+            HandType.ROYAL_FLUSH -> myPlayer.stack
+        }
+    }
+
+    if(flop.size == 3 ) {
+        return when (handType) {
+            HandType.HIGH_CARD -> -1
+            HandType.PAIR -> 0
+            HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
+            HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
+            HandType.STRAIGHT-> requiredCall + gameState.minimum_raise *2
+            HandType.FLUSH -> requiredCall + gameState.minimum_raise *2
+            HandType.FULL_HOUSE,
+            HandType.FOUR_OF_A_KIND,
+            HandType.STRAIGHT_FLUSH,
+            HandType.ROYAL_FLUSH -> myPlayer.stack
+        }
+    }
+
     return when (handType) {
-        HandType.HIGH_CARD -> 0
-        HandType.PAIR -> requiredCall + gameState.minimum_raise
-        HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
-        HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-        HandType.STRAIGHT-> requiredCall + gameState.minimum_raise *2
-        HandType.FLUSH -> requiredCall + gameState.minimum_raise *2
+        HandType.HIGH_CARD -> -1
+        HandType.PAIR -> -1
+        HandType.TWO_PAIR -> 0
+        HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1).toInt()
+        HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
+        HandType.FLUSH -> requiredCall + gameState.minimum_raise * 2
         HandType.FULL_HOUSE,
         HandType.FOUR_OF_A_KIND,
         HandType.STRAIGHT_FLUSH,

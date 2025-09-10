@@ -71,31 +71,93 @@ fun getState(gameState: GameState) {
     val myCards = mutableListOf<Card>()
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
+    val flop = gameState.community_cards.subList(0, 3)
+
 }
 
 fun getHandStrength(gameState: GameState): Double {
-    // Define a simple mapping from card rank to a numeric value.
+    // Map card ranks to values
     val rankValues = mapOf(
         "2" to 2, "3" to 3, "4" to 4, "5" to 5,
         "6" to 6, "7" to 7, "8" to 8, "9" to 9,
         "10" to 10, "J" to 11, "Q" to 12, "K" to 13, "A" to 14
     )
 
+    // Combine hole cards and community cards into one list (7 cards)
     val myPlayer = gameState.players[gameState.in_action]
-    // Gather all cards: hole cards (if available) and community cards.
-    val allCards = mutableListOf<Card>()
-    myPlayer.hole_cards?.let { allCards.addAll(it) }
-    allCards.addAll(gameState.community_cards)
+    val allCards: List<Card> = (myPlayer.hole_cards ?: emptyList()) + gameState.community_cards
 
-    // Compute total score based on available cards.
-    val totalScore = allCards.sumOf { card ->
-        rankValues.getOrDefault(card.rank, 0)
+    // Count rank frequencies and suit frequencies
+    val rankFreq = mutableMapOf<Int, Int>()
+    val suitFreq = mutableMapOf<String, Int>()
+    val ranksList = mutableListOf<Int>()
+    for (card in allCards) {
+        val value = rankValues.getOrDefault(card.rank, 0)
+        ranksList.add(value)
+        rankFreq[value] = rankFreq.getOrDefault(value, 0) + 1
+        suitFreq[card.suit] = suitFreq.getOrDefault(card.suit, 0) + 1
     }
 
-    // In our simple approach, we assume the maximum possible total for 7 cards is if all cards are Aces.
-    // That's 7 * 14 = 98. The minimal total (if all are "2") is 7 * 2 = 14.
-    // Normalize the score between 0.0 and 1.0.
-    val normalized = ((totalScore - 14).toDouble() / (98 - 14).toDouble()).coerceIn(0.0, 1.0)
-    return normalized
-}
+    // Determine if flush exists (5 or more cards with same suit)
+    val flushSuit = suitFreq.entries.find { it.value >= 5 }?.key
+    val isFlush = flushSuit != null
 
+    // Sort the card values and remove duplicates for straight detection
+    val uniqueRanks = ranksList.toSet().toList().sorted()
+
+    // Function that checks for straight in a sorted list
+    fun hasStraight(ranks: List<Int>): Boolean {
+        if (ranks.size < 5) return false
+        var consecutive = 1
+        for (i in 1 until ranks.size) {
+            if (ranks[i] == ranks[i - 1] + 1) {
+                consecutive++
+                if (consecutive >= 5) return true
+            } else if (ranks[i] != ranks[i - 1]) {
+                consecutive = 1
+            }
+        }
+        // Special case: Ace can be low in A-2-3-4-5
+        if (uniqueRanks.contains(14)) {
+            val lowStraight = listOf(2, 3, 4, 5)
+            if (lowStraight.all { it in ranks }) return true
+        }
+        return false
+    }
+
+    // Check if straight exists
+    val isStraight = hasStraight(uniqueRanks)
+
+    // Check for straight flush (if flush, then check straight within flush suit cards)
+    var isStraightFlush = false
+    if (isFlush) {
+        val flushCards = allCards.filter { it.suit == flushSuit }
+        val flushRanks = flushCards.map { rankValues.getOrDefault(it.rank, 0) }.toSet().toList().sorted()
+        isStraightFlush = hasStraight(flushRanks)
+    }
+
+    // Count multiples: pairs, three of a kind, four of a kind.
+    val pairs = rankFreq.filter { it.value == 2 }.size
+    val trips = rankFreq.filter { it.value == 3 }.size
+    val quads = rankFreq.filter { it.value == 4 }.size
+
+    // Determine hand type and assign a base score.
+    val score = when {
+        isStraightFlush && uniqueRanks.contains(14) && uniqueRanks.contains(13) -> 1.0 // Royal flush
+        isStraightFlush -> 0.9 // Straight flush
+        quads > 0 -> 0.85       // Four of a kind
+        trips > 0 && pairs > 0 -> 0.8  // Full house
+        isFlush -> 0.75         // Flush
+        isStraight -> 0.7       // Straight
+        trips > 0 -> 0.65       // Three of a kind
+        pairs >= 2 -> 0.6       // Two pair
+        pairs == 1 -> 0.55      // One Pair
+        else -> {
+            // For high card, use the highest card normalized between 0.4 and 0.5
+            val highCard = uniqueRanks.maxOrNull() ?: 0
+            0.4 + ((highCard - 2) / 12.0 * 0.1)
+        }
+    }
+
+    return score
+}

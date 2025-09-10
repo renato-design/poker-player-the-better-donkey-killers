@@ -17,36 +17,32 @@ class PlayerDecision {
     }
 
     fun version(): String {
-        return "donkeykilla"
+        return "allin babyyy"
     }
-}
-
-fun isSmallOrBigBlind(gameState: GameState, playerName: String): Boolean {
-    val sbIndex = (gameState.dealer + 1) % gameState.players.size
-    val bbIndex = (gameState.dealer + 2) % gameState.players.size
-
-    val sbName = gameState.players[sbIndex].name
-    val bbName = gameState.players[bbIndex].name
-
-    return playerName == sbName || playerName == bbName
 }
 
 fun makeBet(gameState: GameState): Int {
 
-    if (!isSmallOrBigBlind(gameState, "The better donkey killers")) {
-        val outNumber = gameState.players.count { player -> player.status == "out"}
-        if (outNumber != 2) {
-            return 0
-        }
-    }
-
+    var ctr = 0
+    gameState.players.forEach{ player -> if(player.status == "out") ctr++}
     val myPlayer = gameState.players[gameState.in_action]
     val requiredCall = gameState.current_buy_in - myPlayer.bet
+
+//    if(ctr <= 1) {
+//        return 0
+//    }
 
     val myCards = mutableListOf<Card>()
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
     val flop = gameState.community_cards
+
+
+//    val preflopBet = PreflopBettor().makeBetPreflop(gameState)
+//
+//    if (preflopBet > 0) {
+//        return preflopBet
+//    }
 
     val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
 

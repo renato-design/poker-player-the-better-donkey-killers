@@ -12,7 +12,7 @@ data class GameState(
     val dealer: Int,
     val orbits: Int,
     val in_action: Int,
-    val players: List<PlayerDecision>,
+    val players: List<Player>,
     val community_cards: List<Card>
 )
 

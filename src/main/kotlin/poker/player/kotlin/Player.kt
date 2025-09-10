@@ -31,6 +31,8 @@ fun makeBet(gameState: GameState): Int {
         return 0
     }
 
+    return gameState.current_buy_in - myPlayer.bet + 30
+
     // Obtain the hand strength rating from the RainMan API, value from 0.0 (worst) to 1.0 (best)
     val handStrength = getHandStrength(gameState)
 

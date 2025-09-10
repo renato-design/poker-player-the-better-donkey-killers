@@ -22,7 +22,6 @@ class PlayerDecision {
 
 fun makeBet(gameState: GameState): Int {
     // Get the current player's data using the in_action index
-    return 500
     val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return 0
 
     // Calculate the minimal call amount required to stay in the hand
@@ -32,7 +31,7 @@ fun makeBet(gameState: GameState): Int {
         return 0
     }
 
-    return gameState.current_buy_in - myPlayer.bet + gameState.minimum_raise
+//    return gameState.current_buy_in - myPlayer.bet + gameState.minimum_raise
 
     // Obtain the hand strength rating from the RainMan API, value from 0.0 (worst) to 1.0 (best)
     val handStrength = getHandStrength(gameState)
@@ -42,11 +41,19 @@ fun makeBet(gameState: GameState): Int {
     // If hand strength is high enough and the player can afford a raise, bet call + minimum_raise.
     // Otherwise, just call the required amount.
     return when {
-        handStrength < 0.5 -> {
+        handStrength <= 0.35 -> {
             // Hand is not good enough to continue; folding.
             0
         }
-        handStrength > 0.85 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
+        handStrength > 0.95 -> {
+            // For a very strong hand, try to raise the bet.
+            myPlayer.stack
+        }
+        handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
+            // For a very strong hand, try to raise the bet.
+            requiredCall + gameState.minimum_raise * 2
+        }
+        handStrength > 0.35 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
             // For a very strong hand, try to raise the bet.
             requiredCall + gameState.minimum_raise
         }

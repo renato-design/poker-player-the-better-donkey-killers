@@ -27,9 +27,9 @@ fun makeBet(gameState: GameState): Int {
     val myPlayer = gameState.players[gameState.in_action]
     val requiredCall = gameState.current_buy_in - myPlayer.bet
 
-    if(!(ctr > 1)) {
-        return 0
-    }
+//    if(ctr <= 1) {
+//        return 0
+//    }
 
     val myCards = mutableListOf<Card>()
     myPlayer.hole_cards?.let { myCards.addAll(it) }
@@ -70,7 +70,7 @@ fun makeBet(gameState: GameState): Int {
         }
         return when (handType) {
             HandType.HIGH_CARD -> requiredCall
-            HandType.PAIR -> requiredCall + (raiseAmount).toInt()
+            HandType.PAIR -> requiredCall
             HandType.TWO_PAIR -> requiredCall + raiseAmount
             HandType.THREE_OF_A_KIND-> requiredCall + (raiseAmount * 1.5).toInt()
             HandType.STRAIGHT-> requiredCall + raiseAmount *2

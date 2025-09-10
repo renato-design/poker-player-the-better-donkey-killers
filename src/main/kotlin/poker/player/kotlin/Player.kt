@@ -26,7 +26,7 @@ fun makeBet(gameState: GameState): Int {
 
     // Calculate the minimal call amount required to stay in the hand
     val requiredCall = gameState.current_buy_in - myPlayer.bet
-    if (requiredCall <= 0) {
+    if (requiredCall < 0) {
         // Nothing more to call
         return 0
     }

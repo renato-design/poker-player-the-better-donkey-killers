@@ -22,6 +22,7 @@ class PlayerDecision {
 
 fun makeBet(gameState: GameState): Int {
     // Get the current player's data using the in_action index
+    return 1000
     val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return 0
 
     // Calculate the minimal call amount required to stay in the hand

@@ -4,7 +4,20 @@ import poker.player.kotlin.handtype.HandType
 
 class HandEvaluator {
 
-    fun evaluateBestHand(cards: List<Card>): HandType {
+    fun evaluateHand(cards: List<Card>): HandType {
+        return if (cards.size == 2) evaluatePreFlopHand(cards)
+        else evaluateBestHand(cards)
+    }
+
+    private fun evaluatePreFlopHand(cards: List<Card>): HandType {
+        return if (cards[0].rank == cards[1].rank) {
+            HandType.PAIR
+        } else {
+            HandType.HIGH_CARD
+        }
+    }
+
+    private fun evaluateBestHand(cards: List<Card>): HandType {
         val combinations = cards.combinations(5)
 
         return combinations
@@ -14,6 +27,7 @@ class HandEvaluator {
 
     // ---- Helper: evaluate exactly 5 cards ----
     private fun evaluateFiveCardHand(cards: List<Card>): HandType {
+
         val rankMap = mapOf(
             "2" to 2, "3" to 3, "4" to 4, "5" to 5,
             "6" to 6, "7" to 7, "8" to 8, "9" to 9,

@@ -90,12 +90,21 @@ class PreflopBettor {
         val rank1Index = ranks.indexOf(holeCards[0].rank)
         val rank2Index = ranks.indexOf(holeCards[1].rank)
         if (rank1Index == -1 || rank2Index == -1) return null
-        val highestRank = if (rank1Index < rank2Index) holeCards[0].rank else holeCards[1].rank
+        
         val isSuited = holeCards[0].suit == holeCards[1].suit
-        return PreflopCard(highestRank, isSuited)
+        
+        // For pairs, use the same rank twice (e.g., "AA")
+        if (rank1Index == rank2Index) {
+            return PreflopCard(holeCards[0].rank + holeCards[0].rank, false) // Pairs are never "suited"
+        }
+        
+        // For non-pairs, put the higher rank first (e.g., "AK" not "KA")
+        val higherRank = if (rank1Index < rank2Index) holeCards[0].rank else holeCards[1].rank
+        val lowerRank = if (rank1Index < rank2Index) holeCards[1].rank else holeCards[0].rank
+        return PreflopCard(higherRank + lowerRank, isSuited)
     }
 
-    private fun makeBet(bbLeft: Int, position: Position, gameState: GameState): Int {
+    fun makeBet(bbLeft: Int, position: Position, gameState: GameState): Int {
 
         val myPlayer = gameState.players[gameState.in_action]
 

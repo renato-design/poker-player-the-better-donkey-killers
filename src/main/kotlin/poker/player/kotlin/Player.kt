@@ -29,7 +29,7 @@ fun makeBet(gameState: GameState): Int {
     val flop = gameState.community_cards
 
     val requiredCall = gameState.current_buy_in - myPlayer.bet
-    if (requiredCall < 0) {
+    if (requiredCall <= 0) {
         return 0
     }
 
@@ -38,7 +38,7 @@ fun makeBet(gameState: GameState): Int {
 
     if(flop.size < 3 ) {
         return when (handType) {
-            HandType.HIGH_CARD -> 0
+            HandType.HIGH_CARD -> requiredCall
             HandType.PAIR -> requiredCall + gameState.minimum_raise *2
             HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
             HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
@@ -54,8 +54,8 @@ fun makeBet(gameState: GameState): Int {
     if(flop.size == 3 ) {
         return when (handType) {
             HandType.HIGH_CARD -> 0
-            HandType.PAIR -> 0
-            HandType.TWO_PAIR -> 0
+            HandType.PAIR -> requiredCall
+            HandType.TWO_PAIR -> requiredCall
             HandType.THREE_OF_A_KIND-> requiredCall + gameState.minimum_raise
             HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
             HandType.FLUSH -> requiredCall + (gameState.minimum_raise * 1.5).toInt()
@@ -69,9 +69,9 @@ fun makeBet(gameState: GameState): Int {
     return when (handType) {
         HandType.HIGH_CARD -> 0
         HandType.PAIR -> 0
-        HandType.TWO_PAIR -> 0
-        HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1).toInt()
-        HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
+        HandType.TWO_PAIR -> requiredCall
+        HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 0.5).toInt()
+        HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1).toInt()
         HandType.FLUSH -> requiredCall + gameState.minimum_raise * 2
         HandType.FULL_HOUSE -> requiredCall + gameState.minimum_raise * 2
         HandType.FOUR_OF_A_KIND,

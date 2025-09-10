@@ -23,15 +23,11 @@ class PlayerDecision {
 fun makeBet(gameState: GameState): Int {
 
     var ctr = 0
-    gameState.players.forEach{ player -> if(player.status == "active") ctr++}
+    gameState.players.forEach{ player -> if(player.status == "out") ctr++}
     val myPlayer = gameState.players[gameState.in_action]
     val requiredCall = gameState.current_buy_in - myPlayer.bet
 
-    if(ctr > 2) {
-        val a = Random(20)
-        if(a.nextInt(ctr) < 2) {
-            return requiredCall + gameState.minimum_raise
-        }
+    if(!(ctr > 1)) {
         return 0
     }
 

@@ -58,7 +58,7 @@ fun makeBet(gameState: GameState): Int {
             HandType.TWO_PAIR -> 0
             HandType.THREE_OF_A_KIND-> requiredCall + gameState.minimum_raise
             HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-            HandType.FLUSH -> requiredCall + gameState.minimum_raise *2
+            HandType.FLUSH -> requiredCall + (gameState.minimum_raise * 1.5).toInt()
             HandType.FULL_HOUSE -> requiredCall + gameState.minimum_raise *2
             HandType.FOUR_OF_A_KIND,
             HandType.STRAIGHT_FLUSH,
@@ -73,7 +73,7 @@ fun makeBet(gameState: GameState): Int {
         HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1).toInt()
         HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
         HandType.FLUSH -> requiredCall + gameState.minimum_raise * 2
-        HandType.FULL_HOUSE,
+        HandType.FULL_HOUSE -> requiredCall + gameState.minimum_raise * 2
         HandType.FOUR_OF_A_KIND,
         HandType.STRAIGHT_FLUSH,
         HandType.ROYAL_FLUSH -> myPlayer.stack

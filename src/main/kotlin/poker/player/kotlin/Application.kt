@@ -29,7 +29,10 @@ fun main() {
                     val json = JSONObject(body)
                     val bet = playerDecision.betRequest(json)
                     // LeanPoker expects plain number text
-                    call.respondText(bet.toString(), ContentType.Text.Plain)
+                    call.respondText(
+                        "500", 
+                        ContentType.Text.Plain
+                    )
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, "0")
                 }

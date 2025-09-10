@@ -30,12 +30,31 @@ fun makeBet(gameState: GameState): Int {
 
     val requiredCall = gameState.current_buy_in - myPlayer.bet
 
-    val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
-
     val preflopBet = PreflopBettor().makeBetPreflop(gameState)
 
-    if (preflopBet != -1) {
+    if (preflopBet > 0) {
         return preflopBet
+    }
+
+    val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
+
+    val raiseAmount = if (flop.isEmpty()) {
+        gameState.minimum_raise
+    } else {
+        val flopAdjustment = when (HandEvaluator().evaluateHand(flop)) {
+            HandType.HIGH_CARD -> 0.0
+            HandType.PAIR -> 0.2
+            HandType.TWO_PAIR -> 0.4
+            HandType.THREE_OF_A_KIND -> 0.6
+            HandType.STRAIGHT -> 0.8
+            HandType.FLUSH -> 0.8
+            HandType.FULL_HOUSE -> 1.0
+            HandType.FOUR_OF_A_KIND -> 1.0
+            HandType.STRAIGHT_FLUSH -> 1.0
+            HandType.ROYAL_FLUSH -> 1.0
+        }
+
+        (gameState.minimum_raise * (flopAdjustment)).toInt()
     }
 
     if(flop.size < 3 ) {
@@ -44,11 +63,11 @@ fun makeBet(gameState: GameState): Int {
         }
         return when (handType) {
             HandType.HIGH_CARD -> requiredCall
-            HandType.PAIR -> requiredCall + (gameState.minimum_raise).toInt()
-            HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
-            HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-            HandType.STRAIGHT-> requiredCall + gameState.minimum_raise *2
-            HandType.FLUSH -> requiredCall + gameState.minimum_raise *2
+            HandType.PAIR -> requiredCall + (raiseAmount).toInt()
+            HandType.TWO_PAIR -> requiredCall + raiseAmount
+            HandType.THREE_OF_A_KIND-> requiredCall + (raiseAmount * 1.5).toInt()
+            HandType.STRAIGHT-> requiredCall + raiseAmount *2
+            HandType.FLUSH -> requiredCall + raiseAmount *2
             HandType.FULL_HOUSE,
             HandType.FOUR_OF_A_KIND,
             HandType.STRAIGHT_FLUSH,
@@ -59,17 +78,17 @@ fun makeBet(gameState: GameState): Int {
     if(flop.size == 3 ) {
 
         if (requiredCall <= 0) {
-            return gameState.minimum_raise
+            return raiseAmount
         }
 
         return when (handType) {
             HandType.HIGH_CARD -> 0
             HandType.PAIR -> requiredCall
             HandType.TWO_PAIR -> requiredCall
-            HandType.THREE_OF_A_KIND-> requiredCall + gameState.minimum_raise
-            HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-            HandType.FLUSH -> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-            HandType.FULL_HOUSE -> requiredCall + gameState.minimum_raise *2
+            HandType.THREE_OF_A_KIND-> requiredCall + raiseAmount
+            HandType.STRAIGHT-> requiredCall + (raiseAmount * 1.5).toInt()
+            HandType.FLUSH -> requiredCall + (raiseAmount * 1.5).toInt()
+            HandType.FULL_HOUSE -> requiredCall + raiseAmount *2
             HandType.FOUR_OF_A_KIND,
             HandType.STRAIGHT_FLUSH,
             HandType.ROYAL_FLUSH -> myPlayer.stack
@@ -84,10 +103,10 @@ fun makeBet(gameState: GameState): Int {
         HandType.HIGH_CARD -> 0
         HandType.PAIR -> 0
         HandType.TWO_PAIR -> requiredCall
-        HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1).toInt()
-        HandType.STRAIGHT-> requiredCall + (gameState.minimum_raise * 1.5).toInt()
-        HandType.FLUSH -> requiredCall + gameState.minimum_raise * 2
-        HandType.FULL_HOUSE -> requiredCall + gameState.minimum_raise * 2
+        HandType.THREE_OF_A_KIND-> requiredCall + (raiseAmount * 1).toInt()
+        HandType.STRAIGHT-> requiredCall + (raiseAmount * 1.5).toInt()
+        HandType.FLUSH -> requiredCall + raiseAmount * 2
+        HandType.FULL_HOUSE -> requiredCall + raiseAmount * 2
         HandType.FOUR_OF_A_KIND,
         HandType.STRAIGHT_FLUSH,
         HandType.ROYAL_FLUSH -> myPlayer.stack

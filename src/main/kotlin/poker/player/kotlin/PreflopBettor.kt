@@ -119,6 +119,7 @@ class PreflopBettor {
             }
             Position.CUTOFF -> {
                 return when {
+                    bbLeft >= 20 -> areHandsInRange("A2s+,K3s+,Q7s+,J8s+,T8s+,97s+,86s+,76s,22+,A5o+,K9o+,Q9o+,JTo,T9o", gameState) .let { if (it) gameState.minimum_raise else 0 }
                     bbLeft >= 15 -> areHandsInRange("A2s+,K5s+,Q8s+,J8s+,T8s+,98s+,87s,22+,A2o+,KTo+,QTo+,JTo", gameState) .let { if (it) myPlayer.stack else 0 }
                     bbLeft >= 10 -> areHandsInRange("A2s+,K5s+,Q8s+,J8s+,T8s+,98s+,87s,22+,A2o+,KTo+,QTo+,JTo", gameState) .let { if (it) myPlayer.stack else 0 }
                     bbLeft >= 5 -> areHandsInRange("A2s+,K2s+,Q6s+,J7s+,T7s+,98s,87s,22+,A2o+,K6o+,Q9o+,J9o+", gameState) .let { if (it) myPlayer.stack else 0 }
@@ -127,6 +128,7 @@ class PreflopBettor {
             }
             Position.BIG_BLIND, Position.SMALL_BLIND -> {
                 return when {
+                    bbLeft >= 20 -> areHandsInRange("A2s+,K3s+,Q7s+,J8s+,T8s+,97s+,86s+,76s,22+,A5o+,K9o+,Q9o+,JTo,T9o", gameState) .let { if (it) gameState.minimum_raise else 0 }
                     bbLeft >= 15 -> areHandsInRange("A2s+,K9s+,Q9s+J9s+,T9s+,98s+,22+,A8o+,KJo+", gameState) .let { if (it) myPlayer.stack else 0 }
                     bbLeft >= 10 -> areHandsInRange("A2s+,K9s+,Q9s+J9s+,T9s+,98s+,22+,A8o+,KJo+", gameState) .let { if (it) myPlayer.stack else 0 }
                     else -> areHandsInRange("A2s+,K2s+,Q2s+J2s+,T2s+,92s+,83s+,74s+,63s+,53s+,43s+,22+,A2o+,K2o+,Q2o+,J2o+,T3o+,96o+,86o+,76o+", gameState) .let { if (it) myPlayer.stack else 0 }

@@ -16,6 +16,20 @@ class PreflopBettorTests {
     }
 
     @Test
+    fun `makeBetPreflop over 15bb`() {
+        val gameState = createTestGameState(
+            inAction = 0,
+            dealer = 0,
+            smallBlind = 10,
+            playerStacks = listOf(320),
+            holeCards = listOf(Card("A", "spades"), Card("A", "hearts")) // AA - strong hand
+        )
+
+        val result = bettor.makeBetPreflop(gameState)
+        assertEquals(-1, result, "Should go all-in with AA on button with 15+ BB")
+    }
+
+    @Test
     fun `parsePreflopRange parses 22+ into all pocket pairs 22AA`() {
         val result = bettor.parsePreflopRange("22+")
         val expectedPairs = listOf("22","33","44","55","66","77","88","99","TT","JJ","QQ","KK","AA")

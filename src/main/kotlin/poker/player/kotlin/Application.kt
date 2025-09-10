@@ -10,7 +10,7 @@ import io.ktor.server.routing.*
 import org.json.JSONObject
 
 fun main() {
-    val player = Player()
+    val playerDecision = PlayerDecision()
     embeddedServer(Netty, getPort()) {
         routing {
             // Basic health endpoint
@@ -20,14 +20,14 @@ fun main() {
 
             // LeanPoker REST API endpoints
             get("/version") {
-                call.respondText(player.version(), ContentType.Text.Plain)
+                call.respondText(playerDecision.version(), ContentType.Text.Plain)
             }
 
             post("/bet") {
                 val body = call.receiveText()
                 try {
                     val json = JSONObject(body)
-                    val bet = player.betRequest(json)
+                    val bet = playerDecision.betRequest(json)
                     // LeanPoker expects plain number text
                     call.respondText(bet.toString(), ContentType.Text.Plain)
                 } catch (e: Exception) {
@@ -43,11 +43,11 @@ fun main() {
                     if (body.isNotBlank()) {
                         JSONObject(body)
                     }
-                    player.showdown()
+                    playerDecision.showdown()
                     call.respondText("OK", ContentType.Text.Plain)
                 } catch (e: Exception) {
                     // Invalid JSON, but still respond OK to not break tournament flow
-                    player.showdown()
+                    playerDecision.showdown()
                     call.respondText("OK", ContentType.Text.Plain)
                 }
             }
@@ -62,16 +62,16 @@ fun main() {
                             "Missing game_state!"
                         } else {
                             val json = JSONObject(gameState)
-                            player.betRequest(json).toString()
+                            playerDecision.betRequest(json).toString()
                         }
                     }
 
                     "showdown" -> {
-                        player.showdown()
+                        playerDecision.showdown()
                         "OK"
                     }
 
-                    "version" -> player.version()
+                    "version" -> playerDecision.version()
                     else -> "Unknown action '$action'!"
                 }
 

@@ -1,7 +1,7 @@
 package poker.player.kotlin
 
-interface PlayerDecision {
+interface PlayerDecisionDecider {
 
-    fun raise(gameState: GameState)
+    fun makeBet(gameState: GameState)
 
 }

@@ -2,7 +2,7 @@ package poker.player.kotlin
 
 import org.json.JSONObject
 
-class Player {
+class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
         return 100
     }

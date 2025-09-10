@@ -13,15 +13,51 @@ fun main() {
     val player = Player()
     embeddedServer(Netty, getPort()) {
         routing {
+            // Basic health endpoint
             get("/") {
-                call.respondText("Hello, world!", ContentType.Text.Html)
+                call.respondText("OK", ContentType.Text.Plain)
             }
+
+            // LeanPoker REST API endpoints
+            get("/version") {
+                call.respondText(player.version(), ContentType.Text.Plain)
+            }
+
+            post("/bet") {
+                val body = call.receiveText()
+                try {
+                    val json = JSONObject(body)
+                    val bet = player.betRequest(json)
+                    // LeanPoker expects plain number text
+                    call.respondText(bet.toString(), ContentType.Text.Plain)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, "0")
+                }
+            }
+
+            post("/showdown") {
+                // Consume the body for compatibility, even if Player.showdown ignores it
+                val body = call.receiveText()
+                try {
+                    // Validate JSON format if provided
+                    if (body.isNotBlank()) {
+                        JSONObject(body)
+                    }
+                    player.showdown()
+                    call.respondText("OK", ContentType.Text.Plain)
+                } catch (e: Exception) {
+                    // Invalid JSON, but still respond OK to not break tournament flow
+                    player.showdown()
+                    call.respondText("OK", ContentType.Text.Plain)
+                }
+            }
+
+            // Backward-compatible action-based endpoint used by older runners
             post {
                 val formParameters = call.receiveParameters()
                 val result = when (val action = formParameters["action"].toString()) {
                     "bet_request" -> {
                         val gameState = formParameters["game_state"]
-
                         if (gameState == null) {
                             "Missing game_state!"
                         } else {
@@ -47,6 +83,5 @@ fun main() {
 
 private fun getPort(): Int {
     val port = System.getenv("PORT") ?: "8080"
-
     return Integer.parseInt(port)
 }

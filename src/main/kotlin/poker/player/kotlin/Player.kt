@@ -32,7 +32,7 @@ fun makeBet(gameState: GameState): Int {
 
     val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
 
-    val raiseAmount = if (flop.size == 0 ) {
+    val raiseAmount = if (flop.isEmpty()) {
         gameState.minimum_raise
     } else {
         val flopAdjustment = when (HandEvaluator().evaluateHand(flop)) {

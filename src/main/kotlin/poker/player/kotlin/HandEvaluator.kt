@@ -5,8 +5,11 @@ import poker.player.kotlin.handtype.HandType
 class HandEvaluator {
 
     fun evaluateHand(cards: List<Card>): HandType {
-        return if (cards.size == 2) evaluatePreFlopHand(cards)
-        else evaluateBestHand(cards)
+        return when (cards.size) {
+            2 -> evaluatePreFlopHand(cards)
+            3 -> evaluateBestOfThree(cards)
+            else -> evaluateBestHand(cards)
+        }
     }
 
     private fun evaluatePreFlopHand(cards: List<Card>): HandType {
@@ -19,6 +22,23 @@ class HandEvaluator {
             } else {
                 HandType.HIGH_CARD
             }
+        }
+    }
+
+    private fun evaluateBestOfThree(cards: List<Card>): HandType {
+        val rankMap = mapOf(
+            "2" to 2, "3" to 3, "4" to 4, "5" to 5,
+            "6" to 6, "7" to 7, "8" to 8, "9" to 9,
+            "10" to 10, "J" to 11, "Q" to 12, "K" to 13, "A" to 14
+        )
+        val ranks = cards.map { rankMap[it.rank] ?: error("Unknown rank ${it.rank}") }
+
+        val rankCounts = ranks.groupingBy { it }.eachCount().values.sortedDescending()
+
+        return when {
+            rankCounts[0] == 3 -> HandType.THREE_OF_A_KIND
+            rankCounts[0] == 2 -> HandType.PAIR
+            else -> HandType.HIGH_CARD
         }
     }
 

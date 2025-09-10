@@ -38,7 +38,7 @@ fun makeBet(gameState: GameState): Int {
 
     if(flop.size < 3 ) {
         return when (handType) {
-            HandType.HIGH_CARD -> requiredCall + gameState.minimum_raise
+            HandType.HIGH_CARD -> 0
             HandType.PAIR -> requiredCall + gameState.minimum_raise *2
             HandType.TWO_PAIR -> requiredCall + gameState.minimum_raise
             HandType.THREE_OF_A_KIND-> requiredCall + (gameState.minimum_raise * 1.5).toInt()

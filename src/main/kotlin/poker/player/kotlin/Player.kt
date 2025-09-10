@@ -22,11 +22,11 @@ class PlayerDecision {
 
 fun makeBet(gameState: GameState): Int {
     // Get the current player's data using the in_action index
-    val myPlayer = gameState.players.getOrNull(gameState.in_action) ?: return 0
+    val myPlayer = gameState.players.getOrNull(gameState.in_action)// ?: return 0
 
     // Calculate the minimal call amount required to stay in the hand
-    val requiredCall = gameState.current_buy_in - myPlayer.bet
-    if (requiredCall < 0) {
+    val requiredCall = gameState.current_buy_in - (myPlayer?.bet?: 0)
+    if (requiredCall < 0 || myPlayer == null) {
         // Nothing more to call
         return 0
     }

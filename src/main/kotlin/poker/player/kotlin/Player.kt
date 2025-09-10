@@ -1,6 +1,7 @@
 package poker.player.kotlin
 
 import org.json.JSONObject
+import poker.player.kotlin.handtype.HandType
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -64,7 +65,7 @@ fun makeBet(gameState: GameState): Int {
     }
 }
 
-fun getState(gameState: GameState) {
+fun getState(gameState: GameState): Int {
 
     val myPlayer = gameState.players[gameState.in_action]
 
@@ -72,6 +73,24 @@ fun getState(gameState: GameState) {
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
     val flop = gameState.community_cards.subList(0, 3)
+
+    return if (flop.plus(myCards).size == 5){
+        val handType = FlopEvaluator().evaluateHand(flop.plus(myCards))
+        return when (handType) {
+            HandType.HIGH_CARD -> 0
+            HandType.PAIR,
+            HandType.TWO_PAIR,
+            HandType.THREE_OF_A_KIND,
+            HandType.STRAIGHT,
+            HandType.FLUSH -> makeBet(gameState)
+            HandType.FULL_HOUSE,
+            HandType.FOUR_OF_A_KIND,
+            HandType.STRAIGHT_FLUSH,
+            HandType.ROYAL_FLUSH -> myPlayer.stack
+        }
+    } else {
+        makeBet(gameState)
+    }
 
 }
 

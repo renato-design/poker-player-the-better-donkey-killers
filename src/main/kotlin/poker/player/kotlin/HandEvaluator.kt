@@ -10,10 +10,15 @@ class HandEvaluator {
     }
 
     private fun evaluatePreFlopHand(cards: List<Card>): HandType {
-        return if (cards[0].rank == cards[1].rank) {
+        val isOpenForRaise = PreFlopEvaluator().isOpenForRaise(cards)
+        return if (isOpenForRaise) {
             HandType.PAIR
         } else {
-            HandType.HIGH_CARD
+            if (cards[0].rank == cards[1].rank) {
+                HandType.PAIR
+            } else {
+                HandType.HIGH_CARD
+            }
         }
     }
 

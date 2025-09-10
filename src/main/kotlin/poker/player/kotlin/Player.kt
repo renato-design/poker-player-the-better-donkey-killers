@@ -2,13 +2,11 @@ package poker.player.kotlin
 
 import org.json.JSONObject
 import poker.player.kotlin.handtype.HandType
-import java.net.HttpURLConnection
-import java.net.URL
 
 class PlayerDecision {
     fun betRequest(game_state: JSONObject): Int {
         val gameStateData = parseGameState(game_state)
-        return getState(gameStateData)
+        return makeBet(gameStateData)
     }
 
     fun showdown() {
@@ -21,7 +19,7 @@ class PlayerDecision {
 
 }
 
-fun getState(gameState: GameState): Int {
+fun makeBet(gameState: GameState): Int {
 
     val myPlayer = gameState.players[gameState.in_action]
 

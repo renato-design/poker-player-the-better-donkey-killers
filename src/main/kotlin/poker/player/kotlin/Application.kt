@@ -21,7 +21,7 @@ fun Application.installRoutes() {
             try {
                 val json = JSONObject(body)
                 // Here we call getState so that different phases (pre-flop / flop / later) are used
-                val decision = getState(parseGameState(json))
+                val decision = makeBet(parseGameState(json))
                 call.respondText(decision.toString(), ContentType.Text.Plain)
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.BadRequest, "0")

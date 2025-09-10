@@ -1,7 +1,6 @@
 package poker.player.kotlin
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class getStateTest {
@@ -33,7 +32,7 @@ class getStateTest {
             myBet = 80, currentBuyIn = 320, minRaise = 240, myStack = 1000,
             holeCards = listOf(Card("2","clubs"), Card("3","diamonds"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold with weak hand
     }
 
@@ -44,7 +43,7 @@ class getStateTest {
             myBet = 80, currentBuyIn = 320, minRaise = 240, myStack = 1000,
             holeCards = listOf(Card("A","spades"), Card("A","hearts"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // folds at exactly 0.55 threshold
     }
 
@@ -55,7 +54,7 @@ class getStateTest {
             myBet = 50, currentBuyIn = 200, minRaise = 50, myStack = 1000,
             holeCards = listOf(Card("K","clubs"), Card("K","diamonds"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
     }
 
@@ -66,7 +65,7 @@ class getStateTest {
             myBet = 100, currentBuyIn = 300, minRaise = 50, myStack = 150,
             holeCards = listOf(Card("Q","spades"), Card("Q","hearts"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
     }
 
@@ -77,7 +76,7 @@ class getStateTest {
             myBet = 400, currentBuyIn = 300, minRaise = 50, myStack = 1000,
             holeCards = listOf(Card("A","clubs"), Card("A","diamonds")) // doesn't matter
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // no additional bet needed
     }
 
@@ -87,7 +86,7 @@ class getStateTest {
             myBet = 0, currentBuyIn = 100, minRaise = 50, myStack = 0,
             holeCards = listOf(Card("A","clubs"), Card("A","diamonds")) // doesn't matter
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // no money to bet
     }
 
@@ -98,7 +97,7 @@ class getStateTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("A","spades"), Card("K","spades"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold with 0.5 strength
     }
 
@@ -109,7 +108,7 @@ class getStateTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("2","clubs"), Card("7","diamonds"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold
     }
 
@@ -120,7 +119,7 @@ class getStateTest {
             myBet = 50, currentBuyIn = 100, minRaise = 25, myStack = 1000,
             holeCards = listOf(Card("8","hearts"), Card("8","diamonds"))
         )
-        val bet = getState(game)
+        val bet = makeBet(game)
         assertEquals(0, bet) // should fold if strength <= 0.55
     }
 }

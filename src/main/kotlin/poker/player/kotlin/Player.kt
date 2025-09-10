@@ -18,7 +18,7 @@ class PlayerDecision {
     fun version(): String {
         return "donkeykilla"
     }
-    
+
 }
 
 fun makeBet(gameState: GameState): Int {
@@ -44,16 +44,20 @@ fun makeBet(gameState: GameState): Int {
             // Fold if hand is weak
             0
         }
+
         handStrength > 0.95 -> {
             // Very strong hand; go all-in
             myPlayer.stack
         }
+
         handStrength > 0.75 && myPlayer.stack >= requiredCall + gameState.minimum_raise * 2 -> {
             requiredCall + gameState.minimum_raise * 2
         }
+
         handStrength > 0.35 && myPlayer.stack >= requiredCall + gameState.minimum_raise -> {
             requiredCall + gameState.minimum_raise
         }
+
         else -> {
             if (myPlayer.stack >= requiredCall) requiredCall else myPlayer.stack
         }
@@ -67,25 +71,24 @@ fun getState(gameState: GameState): Int {
     val myCards = mutableListOf<Card>()
     myPlayer.hole_cards?.let { myCards.addAll(it) }
 
-    val flop = gameState.community_cards.subList(0, 3)
+    val flop = gameState.community_cards
 
-    return if (flop.plus(myCards).size == 5){
-        val handType = FlopEvaluator().evaluateHand(flop.plus(myCards))
-        return when (handType) {
-            HandType.HIGH_CARD -> 0
-            HandType.PAIR,
-            HandType.TWO_PAIR,
-            HandType.THREE_OF_A_KIND,
-            HandType.STRAIGHT,
-            HandType.FLUSH -> makeBet(gameState)
-            HandType.FULL_HOUSE,
-            HandType.FOUR_OF_A_KIND,
-            HandType.STRAIGHT_FLUSH,
-            HandType.ROYAL_FLUSH -> myPlayer.stack
-        }
-    } else {
-        makeBet(gameState)
+
+    val handType = HandEvaluator().evaluateBestHand(flop.plus(myCards))
+    return when (handType) {
+        HandType.HIGH_CARD -> 0
+        HandType.PAIR,
+        HandType.TWO_PAIR,
+        HandType.THREE_OF_A_KIND,
+        HandType.STRAIGHT,
+        HandType.FLUSH -> makeBet(gameState)
+
+        HandType.FULL_HOUSE,
+        HandType.FOUR_OF_A_KIND,
+        HandType.STRAIGHT_FLUSH,
+        HandType.ROYAL_FLUSH -> myPlayer.stack
     }
+}
 
 }
 
@@ -129,7 +132,7 @@ fun getHandStrength(gameState: GameState): Double {
             }
         }
         if (uniqueRanks.contains(14)) {
-            val lowStraight = listOf(2,3,4,5)
+            val lowStraight = listOf(2, 3, 4, 5)
             if (lowStraight.all { it in ranks }) return true
         }
         return false

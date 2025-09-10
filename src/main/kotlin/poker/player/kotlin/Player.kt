@@ -35,6 +35,11 @@ fun makeBet(gameState: GameState): Int {
 
     val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
 
+    val preflopBet = PreflopBettor().makeBetPreflop(gameState)
+
+    if (preflopBet != -1) {
+        return preflopBet
+    }
 
     if(flop.size < 3 ) {
         return when (handType) {

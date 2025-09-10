@@ -20,11 +20,13 @@ class PlayerDecision {
     fun makeBet(gameState: GameState): Int {
         // Find our own player using the in_action index
         val myPlayer = gameState.players.getOrNull(gameState.in_action)
-        
+
+
         // When player data is invalid, fold by returning 0
         if (myPlayer == null || myPlayer.stack <= 0) {
             return 0
         }
+        return (gameState.current_buy_in - myPlayer.bet) + gameState.minimum_raise + 30
         
         // Simple strategy:
         // Determine call amount needed to match current_buy_in

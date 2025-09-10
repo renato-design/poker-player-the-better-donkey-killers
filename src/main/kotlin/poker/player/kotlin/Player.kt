@@ -101,8 +101,8 @@ fun makeBet(gameState: GameState): Int {
 
     return when (handType) {
         HandType.HIGH_CARD -> 0
-        HandType.PAIR -> requiredCall
-        HandType.TWO_PAIR -> requiredCall
+        HandType.PAIR -> requiredCall + raiseAmount
+        HandType.TWO_PAIR -> requiredCall + raiseAmount
         HandType.THREE_OF_A_KIND-> requiredCall + (raiseAmount * 1).toInt()
         HandType.STRAIGHT-> requiredCall + (raiseAmount * 1.5).toInt()
         HandType.FLUSH -> requiredCall + raiseAmount * 2

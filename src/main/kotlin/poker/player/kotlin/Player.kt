@@ -74,7 +74,7 @@ fun getState(gameState: GameState): Int {
     val flop = gameState.community_cards
 
 
-    val handType = HandEvaluator().evaluateBestHand(flop.plus(myCards))
+    val handType = HandEvaluator().evaluateHand(flop.plus(myCards))
     return when (handType) {
         HandType.HIGH_CARD,
         HandType.PAIR,
